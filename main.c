@@ -23,18 +23,15 @@ int comparator(const void *e1, const void *e2)
 void verifyOutput(const float *input, const pair_t *output, int nTotalElmts, int k)
 {
     int ok = 1;
-    pair_t vec[nTotalElmts];
+    pair_t *vec = malloc(nTotalElmts*sizeof(pair_t));
     for (int i = 0; i < nTotalElmts; i++)
     {
         vec[i].inindex = i;
         vec[i].key = input[i];
     }
-
-    int size = sizeof(vec) / sizeof(pair_t);
-    qsort(vec, size, sizeof(pair_t), comparator);
-
+    qsort(vec, nTotalElmts, sizeof(pair_t), comparator);
     printf("sorted vec:\n");
-    for (int i = 0; i < size; i++)
+    for (int i = 0; i < nTotalElmts; i++)
         printf("key: %f, inindex: %d\n", vec[i].key, vec[i].inindex);
 
     printf("------------\n");
@@ -53,6 +50,8 @@ void verifyOutput(const float *input, const pair_t *output, int nTotalElmts, int
         printf("\nOutput set verified correctly.\n");
     else
         printf("\nOutput set DID NOT compute correctly!!!\n");
+    
+    free(vec);
 }
 
 int main(int argc, char const *argv[])
