@@ -1,0 +1,2 @@
+will use 5 threads to reduce 500000000 total FLOAT elements
+Throughput: 4917924802.156066 OP/s
