@@ -17,7 +17,7 @@
 void drawHeapTree(int heap[], int size, int nLevels) // FIX ME!
 {
     int offset = 0;
-    int space = (int)pow(2, nLevels - 1);
+    // int space = (int)pow(2, nLevels - 1);
     // int space = 0;
 
     int nElements = 1;
@@ -33,12 +33,12 @@ void drawHeapTree(int heap[], int size, int nLevels) // FIX ME!
         printf("\n");
 
         offset += nElements;
-        space = nElements - 1;
+        // space = nElements - 1;
         nElements *= 2;
     }
 }
 
-inline void swap(int *a, int *b) //__attribute__((always_inline));
+void swap(int *a, int *b) //__attribute__((always_inline));
 {
     int temp = *a;
     *a = *b;

@@ -4,8 +4,13 @@
 #include <unistd.h>
 
 #define MAX_SIZE 120
+#define MAX_THREADS 64
+#define MAX_TOTAL_ELEMENTS (500 * 1000 * 1000)
 
 float *input;
+int nTotalElements = 0;
+int k = 0;
+int numThreads = 0;
 
 typedef struct
 {
@@ -23,7 +28,7 @@ int comparator(const void *e1, const void *e2)
 void verifyOutput(const float *input, const pair_t *output, int nTotalElmts, int k)
 {
     int ok = 1;
-    pair_t *vec = malloc(nTotalElmts*sizeof(pair_t));
+    pair_t *vec = malloc(nTotalElmts * sizeof(pair_t));
     for (int i = 0; i < nTotalElmts; i++)
     {
         vec[i].inindex = i;
@@ -50,29 +55,53 @@ void verifyOutput(const float *input, const pair_t *output, int nTotalElmts, int
         printf("\nOutput set verified correctly.\n");
     else
         printf("\nOutput set DID NOT compute correctly!!!\n");
-    
+
     free(vec);
 }
 
 int main(int argc, char const *argv[])
 {
-    int nTotalElements = atoi(argv[1]);
-    int k = atoi(argv[2]);
-    int numThreads = atoi(argv[3]);
+    if (argc != 3)
+    {
+        printf("usage: %s <nTotalElements> <numThreads>\n", argv[0]);
+        return 0;
+    }
+    else
+    {
+        numThreads = atoi(argv[2]);
+        if (numThreads == 0)
+        {
+            printf("usage: %s <nTotalElements> <numThreads>\n", argv[0]);
+            printf("<numThreads> can't be 0\n");
+            return 0;
+        }
+        if (numThreads > MAX_THREADS)
+        {
+            printf("usage: %s <nTotalElements> <numThreads>\n", argv[0]);
+            printf("<numThreads> must be less than %d\n", MAX_THREADS);
+            return 0;
+        }
+        nTotalElements = atoi(argv[1]);
+        if (nTotalElements > MAX_TOTAL_ELEMENTS)
+        {
+            printf("usage: %s <nTotalElements> <numThreads>\n", argv[0]);
+            printf("<nTotalElements> must be up to %d\n", MAX_TOTAL_ELEMENTS);
+            return 0;
+        }
+    }
+
     printf("total elements: %d\n", nTotalElements);
     printf("k: %d\n", k);
     printf("num threads: %d\n", numThreads);
 
     input = malloc(nTotalElements * sizeof(float));
 
-    int inputSize = 0;
     for (int i = 0; i < nTotalElements; i++)
     {
-        int a = rand(); // Returns a pseudo-random integer
-        int b = rand(); // same as above
+        int a = rand();
+        int b = rand();
         float v = a * 100.0 + b;
-        // inserir o valor v na posição p
-        input[inputSize++] = v;
+        input[i] = v;
     }
 
     verifyOutput(input, NULL, nTotalElements, k);
