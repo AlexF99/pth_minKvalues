@@ -156,8 +156,7 @@ int main(int argc, char *argv[])
     for (i = 1; i < nThreads; i++)
     {
         my_thread_id[i] = i;
-        pthread_create(&Thread[i], NULL,
-                       reducePartialSum, &my_thread_id[i]);
+        pthread_create(&Thread[i], NULL, reducePartialSum, &my_thread_id[i]);
     }
 
     // Medindo tempo SEM criacao das threads

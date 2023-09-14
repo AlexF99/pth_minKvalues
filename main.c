@@ -12,6 +12,9 @@ int nTotalElements = 0;
 int k = 0;
 int numThreads = 0;
 
+// pthread variables
+pthread_t threads[MAX_THREADS];
+
 typedef struct
 {
     float key;
@@ -59,33 +62,49 @@ void verifyOutput(const float *input, const pair_t *output, int nTotalElmts, int
     free(vec);
 }
 
+void *thread_routine(void *args)
+{
+    // thread body
+    int thId = *(int *)args;
+    sleep(thId);
+    printf("now I have started thread number %d\n", thId);
+    pthread_exit(NULL);
+}
+
 int main(int argc, char const *argv[])
 {
-    if (argc != 3)
+    if (argc != 4)
     {
-        printf("usage: %s <nTotalElements> <numThreads>\n", argv[0]);
+        printf("usage: %s <nTotalElements> <k> <numThreads>\n", argv[0]);
         return 0;
     }
     else
     {
-        numThreads = atoi(argv[2]);
+        nTotalElements = atoi(argv[1]);
+        if (nTotalElements > MAX_TOTAL_ELEMENTS)
+        {
+            printf("usage: %s <nTotalElements> <k> <numThreads>\n", argv[0]);
+            printf("<nTotalElements> must be up to %d\n", MAX_TOTAL_ELEMENTS);
+            return 0;
+        }
+        k = atoi(argv[2]);
+        if (k > nTotalElements)
+        {
+            printf("usage: %s <nTotalElements> <k> <numThreads>\n", argv[0]);
+            printf("<k> must be up to %d\n", nTotalElements);
+            return 0;
+        }
+        numThreads = atoi(argv[3]);
         if (numThreads == 0)
         {
-            printf("usage: %s <nTotalElements> <numThreads>\n", argv[0]);
+            printf("usage: %s <nTotalElements> <k> <numThreads>\n", argv[0]);
             printf("<numThreads> can't be 0\n");
             return 0;
         }
         if (numThreads > MAX_THREADS)
         {
-            printf("usage: %s <nTotalElements> <numThreads>\n", argv[0]);
+            printf("usage: %s <nTotalElements> <k> <numThreads>\n", argv[0]);
             printf("<numThreads> must be less than %d\n", MAX_THREADS);
-            return 0;
-        }
-        nTotalElements = atoi(argv[1]);
-        if (nTotalElements > MAX_TOTAL_ELEMENTS)
-        {
-            printf("usage: %s <nTotalElements> <numThreads>\n", argv[0]);
-            printf("<nTotalElements> must be up to %d\n", MAX_TOTAL_ELEMENTS);
             return 0;
         }
     }
@@ -93,8 +112,8 @@ int main(int argc, char const *argv[])
     printf("total elements: %d\n", nTotalElements);
     printf("k: %d\n", k);
     printf("num threads: %d\n", numThreads);
-
     input = malloc(nTotalElements * sizeof(float));
+    int *threadIds = malloc(numThreads * sizeof(int));
 
     for (int i = 0; i < nTotalElements; i++)
     {
@@ -104,8 +123,21 @@ int main(int argc, char const *argv[])
         input[i] = v;
     }
 
-    verifyOutput(input, NULL, nTotalElements, k);
+    threadIds[0] = 0;
+    for (int i = 1; i < numThreads; i++)
+    {
+        threadIds[i] = i;
+        pthread_create(&threads[i], NULL, &thread_routine, threadIds + i);
+    }
+    thread_routine(threadIds); // main has to call it too as it is thread[0]
 
+    for (int i = 1; i < numThreads; i++)
+    {
+        pthread_join(threads[i], NULL);
+    }
+
+    verifyOutput(input, NULL, nTotalElements, k);
     free(input);
+    free(threadIds);
     return 0;
 }
