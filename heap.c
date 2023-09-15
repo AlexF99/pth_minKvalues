@@ -1,8 +1,8 @@
 #include <stdio.h>
 #include <math.h>
-#define MAX_HEAP_SIZE (1024 * 1024)
 #include "heap.h"
 
+#define MAX_HEAP_SIZE (1024 * 1024)
 int size = 0;
 
 void drawHeapTree(pair_t *heap, int nLevels)

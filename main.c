@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <pthread.h>
 #include <unistd.h>
+#include <math.h>
 
 #include "heap.h"
 
@@ -119,9 +120,19 @@ int main(int argc, char const *argv[])
             elm.key = v;
 
             insert(output, elm);
-            drawHeapTree(output, (int)(i / 2 + 1));
+            drawHeapTree(output, (int)(log2(i) + 4/ 2));
         }
     }
+
+    for (int i = k; i < nTotalElements; i++)
+    {
+        pair_t elm;
+        elm.inindex = i;
+        elm.key = input[i];
+        decreaseMax(output, elm);
+    }
+    printf("after all decreaseMaxes:\n");
+    drawHeapTree(output, (int)(log2(k) + 4/ 2));
 
     threadIds[0] = 0;
     for (int i = 1; i < numThreads; i++)
