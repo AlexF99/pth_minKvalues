@@ -120,7 +120,7 @@ int main(int argc, char const *argv[])
             elm.key = v;
 
             insert(output, elm);
-            drawHeapTree(output, (int)(log2(i) + 4/ 2));
+            drawHeapTree(output, (int)(log2(i) + 2));
         }
     }
 
@@ -132,7 +132,7 @@ int main(int argc, char const *argv[])
         decreaseMax(output, elm);
     }
     printf("after all decreaseMaxes:\n");
-    drawHeapTree(output, (int)(log2(k) + 4/ 2));
+    drawHeapTree(output, (int)(log2(k) + 2));
 
     threadIds[0] = 0;
     for (int i = 1; i < numThreads; i++)
