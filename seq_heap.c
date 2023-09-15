@@ -10,8 +10,6 @@
 // para compilar:
 // gcc -O3 max-heap.c -o max-heap -lm
 
-#define SHOW_DECREASE_MAX_STEPS 1
-
 #define MAX_HEAP_SIZE (1024 * 1024)
 
 void drawHeapTree(int heap[], int size, int nLevels) // FIX ME!
@@ -63,11 +61,6 @@ void maxHeapify(int heap[], int size, int i)
         {
             swap(&heap[i], &heap[largest]); // Using the swap function
             i = largest;
-#if SHOW_DECREASE_MAX_STEPS
-            drawHeapTree(heap, size, 4);
-            printf("    ~~~~~~~~~~~~~~~~~~~~~~~~~\n");
-            printf("    .........................\n");
-#endif
         }
         else
         {
@@ -122,10 +115,6 @@ void decreaseMax(int heap[], int size, int new_value)
     if (heap[0] > new_value)
     {
         heap[0] = new_value;
-#if SHOW_DECREASE_MAX_STEPS
-        drawHeapTree(heap, size, 4);
-        printf("    ~~~~~~~~~~~~~~~~~~~~~~~~~\n");
-#endif
         maxHeapify(heap, size, 0);
     }
 }
@@ -182,13 +171,9 @@ int main()
             printf("is a heap!\n");
         else
             printf("is NOT a heap!\n");
-#ifndef SHOW_DECREASE_MAX_STEPS
         drawHeapTree(heap, heapSize, 4);
-#endif
     }
-#ifdef SHOW_DECREASE_MAX_STEPS
     drawHeapTree(heap, heapSize, 4);
-#endif
 
     printf("=========================\n");
     printf("=====decreaseMAX tests===\n");
@@ -214,9 +199,7 @@ int main()
         else
             printf("is NOT a max heap!\n");
 
-        // #ifndef SHOW_DECREASE_MAX_STEPS
         drawHeapTree(heap, heapSize, 4);
-        // #endif
     }
 
     return 0;

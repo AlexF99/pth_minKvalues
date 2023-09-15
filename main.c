@@ -3,6 +3,8 @@
 #include <pthread.h>
 #include <unistd.h>
 
+#include "heap.h"
+
 #define MAX_SIZE 120
 #define MAX_THREADS 64
 #define MAX_TOTAL_ELEMENTS (500 * 1000 * 1000)
@@ -11,15 +13,10 @@ float *input;
 int nTotalElements = 0;
 int k = 0;
 int numThreads = 0;
+pair_t *output;
 
 // pthread variables
 pthread_t threads[MAX_THREADS];
-
-typedef struct
-{
-    float key;
-    int inindex;
-} pair_t;
 
 int comparator(const void *e1, const void *e2)
 {
@@ -44,15 +41,7 @@ void verifyOutput(const float *input, const pair_t *output, int nTotalElmts, int
 
     printf("------------\n");
 
-    // DESCOMENTAR QUANDO TIVER PRONTO
-    // for (int i = 0; i < k; i++)
-    // {
-    //     if (output[i].inindex != vec[i].inindex)
-    //     {
-    //         ok = 0;
-    //         break;
-    //     }
-    // }
+    // IMPLEMENTAR COMPARACAO
 
     if (ok)
         printf("\nOutput set verified correctly.\n");
@@ -112,15 +101,26 @@ int main(int argc, char const *argv[])
     printf("total elements: %d\n", nTotalElements);
     printf("k: %d\n", k);
     printf("num threads: %d\n", numThreads);
+
     input = malloc(nTotalElements * sizeof(float));
     int *threadIds = malloc(numThreads * sizeof(int));
+    output = malloc(k * sizeof(pair_t));
 
     for (int i = 0; i < nTotalElements; i++)
     {
-        int a = rand();
-        int b = rand();
+        int a = rand() % 100; // remove the mod 100's after testing
+        int b = rand() % 100;
         float v = a * 100.0 + b;
         input[i] = v;
+        if (i < k)
+        {
+            pair_t elm;
+            elm.inindex = i;
+            elm.key = v;
+
+            insert(output, elm);
+            drawHeapTree(output, (int)(i / 2 + 1));
+        }
     }
 
     threadIds[0] = 0;
@@ -139,5 +139,6 @@ int main(int argc, char const *argv[])
     verifyOutput(input, NULL, nTotalElements, k);
     free(input);
     free(threadIds);
+    free(output);
     return 0;
 }
