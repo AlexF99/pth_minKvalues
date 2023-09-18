@@ -23,7 +23,6 @@ int *heapSizes;
 pthread_t threads[MAX_THREADS];
 pthread_barrier_t barrier;
 pthread_mutex_t heapLocks[MAX_THREADS];
-pthread_mutex_t inputLock;
 
 int comparator(const void *e1, const void *e2)
 {
@@ -34,7 +33,6 @@ int comparator(const void *e1, const void *e2)
 
 void verifyOutput(const float *input, const pair_t *output, int nTotalElmts, int k)
 {
-    int ok = 1;
     pair_t *vec = malloc(nTotalElmts * sizeof(pair_t));
     for (int i = 0; i < nTotalElmts; i++)
     {
@@ -53,67 +51,62 @@ void verifyOutput(const float *input, const pair_t *output, int nTotalElmts, int
 
     printf("------------\n");
 
+    int elementsFound = 0;
     // ACHA CADA ELEMENTO
     for (int i = 0; i < k; i++)
     {
         int found = 0;
-        for (int j = i; j < k; j++)
+        for (int j = 0; j < k; j++)
         {
             if (vec[i].inindex == output[j].inindex)
             {
                 found = 1;
+                elementsFound++;
                 break;
             }
         }
         if (found == 0)
-        {
-            ok = 0;
             break;
-        }
     }
 
-    if (ok)
-        printf("\nOutput set verified correctly.\n");
-    else
+    printf("found %d elements\n", elementsFound);
+
+    if (elementsFound < k)
         printf("\nOutput set DID NOT compute correctly!!!\n");
+    else
+        printf("\nOutput set verified correctly.\n");
 
     free(vec);
+}
+
+int min(int a, int b)
+{
+    if (a < b)
+        return a;
+    else
+        return b;
 }
 
 void *thread_routine(void *args)
 {
     // thread body
     int thId = *(int *)args;
-    while (1)
+
+    int nElements = nTotalElements / numThreads;
+
+    // assume que temos pelo menos 1 elemento por thread
+    int first = thId * nElements;
+    int last = min((thId + 1) * nElements, nTotalElements) - 1;
+
+    for (int i = first; i < last; i++)
     {
-        pthread_mutex_lock(&inputLock);
-        if (inputIndex < nTotalElements)
-        {
-            float maxHeapValue = heaps[0]->key;
-            int maxHeapIndex = 0;
-            for (int i = 0; i < numThreads; i++)
-            {
-                if (heaps[i]->key > maxHeapValue)
-                {
-                    maxHeapValue = heaps[i]->key;
-                    maxHeapIndex = i;
-                }
-            }
-            printf("thread %d, inputIndex %d, v: %.2f\n", thId, inputIndex, input[inputIndex]);
-            pair_t elm;
-            elm.inindex = inputIndex;
-            elm.key = input[inputIndex++];
-            pthread_mutex_unlock(&inputLock);
-            pthread_mutex_lock(&heapLocks[maxHeapIndex]);
-            decreaseMax(heaps[maxHeapIndex], heapSizes[maxHeapIndex], elm);
-            pthread_mutex_unlock(&heapLocks[maxHeapIndex]);
-        }
-        else
-        {
-            printf("i am thread %d and I finished\n", thId);
-            pthread_mutex_unlock(&inputLock);
-            break;
-        }
+        printf("thread %d, inputIndex %d, v: %.2f\n", thId, i, input[i]);
+        pair_t elm;
+        elm.inindex = i;
+        elm.key = input[i];
+        pthread_mutex_lock(&heapLocks[thId]);
+        decreaseMax(heaps[thId], heapSizes[thId], elm);
+        pthread_mutex_unlock(&heapLocks[thId]);
     }
     pthread_barrier_wait(&barrier);
     if (thId != 0)
@@ -190,7 +183,6 @@ int main(int argc, char const *argv[])
         }
     }
 
-    pthread_mutex_init(&inputLock, NULL);
     for (int i = 0; i < numThreads; i++)
     {
         printf("heap %d size: %d\n", i, heapSizes[i]);
@@ -206,7 +198,7 @@ int main(int argc, char const *argv[])
         pthread_create(&threads[i], NULL, &thread_routine, threadIds + i);
     }
     thread_routine(threadIds); // main has to call it too as it is thread[0]
-    
+
     // for (int i = 1; i < numThreads; i++)
     //     pthread_join(threads[i], NULL);
 
@@ -233,7 +225,6 @@ int main(int argc, char const *argv[])
     // housekeeping
     for (int i = 0; i < numThreads; i++)
         pthread_mutex_destroy(&heapLocks[i]);
-    pthread_mutex_destroy(&inputLock);
 
     free(input);
     free(threadIds);
