@@ -1,5 +1,6 @@
 {
     "files.associations": {
-        "pthread.h": "c"
+        "pthread.h": "c",
+        "struct___jmp_buf_tag.h": "c"
     }
 }

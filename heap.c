@@ -3,9 +3,8 @@
 #include "heap.h"
 
 #define MAX_HEAP_SIZE (1024 * 1024)
-int size = 0;
 
-void drawHeapTree(pair_t *heap, int nLevels)
+void drawHeapTree(pair_t *heap, int size, int nLevels)
 {
     int offset = 0;
     int nElements = 1;
@@ -21,7 +20,6 @@ void drawHeapTree(pair_t *heap, int nLevels)
         nElements *= 2;
     }
     printf("--------end heap---------:\n\n");
-
 }
 
 void swap(int index1, int index2, pair_t *heap)
@@ -37,7 +35,7 @@ void swap(int index1, int index2, pair_t *heap)
     heap[index2].key = temp.key;
 }
 
-void maxHeapify(pair_t *heap, int i)
+void maxHeapify(pair_t *heap, int size, int i)
 {
     while (1)
     {
@@ -80,17 +78,17 @@ void heapifyUp(pair_t *heap, int pos)
     heap[pos].key = temp.key;
 }
 
-void insert(pair_t *heap, pair_t element)
+void insert(pair_t *heap, int *size, pair_t element)
 {
-    size += 1;
-    int last = size - 1;
+    *size += 1;
+    int last = *size - 1;
 
     heap[last].inindex = element.inindex;
     heap[last].key = element.key;
     heapifyUp(heap, last);
 }
 
-int isMaxHeap(pair_t *heap)
+int isMaxHeap(pair_t *heap, int size)
 {
     for (int i = 1; i < size; i++)
         if (heap[i].key <= heap[parent(i)].key)
@@ -103,7 +101,7 @@ int isMaxHeap(pair_t *heap)
     return 1;
 }
 
-void decreaseMax(pair_t *heap, pair_t new_element)
+void decreaseMax(pair_t *heap, int size, pair_t new_element)
 {
     if (size == 0)
         return;
@@ -112,6 +110,6 @@ void decreaseMax(pair_t *heap, pair_t new_element)
     {
         heap[0].key = new_element.key;
         heap[0].inindex = new_element.inindex;
-        maxHeapify(heap, 0);
+        maxHeapify(heap, size, 0);
     }
 }

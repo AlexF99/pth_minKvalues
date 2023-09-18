@@ -15,9 +15,15 @@ int nTotalElements = 0;
 int k = 0;
 int numThreads = 0;
 pair_t *output;
+pair_t **heaps;
+int inputIndex = 0;
+int *heapSizes;
 
 // pthread variables
 pthread_t threads[MAX_THREADS];
+pthread_barrier_t barrier;
+pthread_mutex_t heapLocks[MAX_THREADS];
+pthread_mutex_t inputLock;
 
 int comparator(const void *e1, const void *e2)
 {
@@ -36,13 +42,35 @@ void verifyOutput(const float *input, const pair_t *output, int nTotalElmts, int
         vec[i].key = input[i];
     }
     qsort(vec, nTotalElmts, sizeof(pair_t), comparator);
+    qsort(output, k, sizeof(pair_t), comparator);
     printf("sorted vec:\n");
-    for (int i = 0; i < nTotalElmts; i++)
-        printf("key: %f, inindex: %d\n", vec[i].key, vec[i].inindex);
+    for (int i = 0; i < k; i++)
+    {
+        printf("key: %.2f, inindex: %d\n", output[i].key, output[i].inindex);
+        printf("key: %.2f, inindex: %d\n", vec[i].key, vec[i].inindex);
+        printf("correct: %d\n", vec[i].inindex == output[i].inindex);
+    }
 
     printf("------------\n");
 
-    // IMPLEMENTAR COMPARACAO
+    // ACHA CADA ELEMENTO
+    for (int i = 0; i < k; i++)
+    {
+        int found = 0;
+        for (int j = i; j < k; j++)
+        {
+            if (vec[i].inindex == output[j].inindex)
+            {
+                found = 1;
+                break;
+            }
+        }
+        if (found == 0)
+        {
+            ok = 0;
+            break;
+        }
+    }
 
     if (ok)
         printf("\nOutput set verified correctly.\n");
@@ -56,9 +84,41 @@ void *thread_routine(void *args)
 {
     // thread body
     int thId = *(int *)args;
-    sleep(thId);
-    printf("now I have started thread number %d\n", thId);
-    pthread_exit(NULL);
+    while (1)
+    {
+        pthread_mutex_lock(&inputLock);
+        if (inputIndex < nTotalElements)
+        {
+            float maxHeapValue = heaps[0]->key;
+            int maxHeapIndex = 0;
+            for (int i = 0; i < numThreads; i++)
+            {
+                if (heaps[i]->key > maxHeapValue)
+                {
+                    maxHeapValue = heaps[i]->key;
+                    maxHeapIndex = i;
+                }
+            }
+            printf("thread %d, inputIndex %d, v: %.2f\n", thId, inputIndex, input[inputIndex]);
+            pair_t elm;
+            elm.inindex = inputIndex;
+            elm.key = input[inputIndex++];
+            pthread_mutex_unlock(&inputLock);
+            pthread_mutex_lock(&heapLocks[maxHeapIndex]);
+            decreaseMax(heaps[maxHeapIndex], heapSizes[maxHeapIndex], elm);
+            pthread_mutex_unlock(&heapLocks[maxHeapIndex]);
+        }
+        else
+        {
+            printf("i am thread %d and I finished\n", thId);
+            pthread_mutex_unlock(&inputLock);
+            break;
+        }
+    }
+    pthread_barrier_wait(&barrier);
+    if (thId != 0)
+        pthread_exit(NULL);
+    return NULL;
 }
 
 int main(int argc, char const *argv[])
@@ -106,6 +166,13 @@ int main(int argc, char const *argv[])
     input = malloc(nTotalElements * sizeof(float));
     int *threadIds = malloc(numThreads * sizeof(int));
     output = malloc(k * sizeof(pair_t));
+    heaps = malloc(numThreads * sizeof(pair_t *));
+    heapSizes = malloc(numThreads * sizeof(int));
+    for (int i = 0; i < numThreads; i++)
+    {
+        heapSizes[i] = 0;
+        heaps[i] = malloc((int)((k / numThreads) + 2) * sizeof(pair_t));
+    }
 
     for (int i = 0; i < nTotalElements; i++)
     {
@@ -118,21 +185,19 @@ int main(int argc, char const *argv[])
             pair_t elm;
             elm.inindex = i;
             elm.key = v;
-
-            insert(output, elm);
-            drawHeapTree(output, (int)(log2(i) + 2));
+            insert(heaps[i % numThreads], &heapSizes[i % numThreads], elm);
+            // printf("inserindo elemento %.2f no heap %d. heapsize: %d\n", elm.key, i % numThreads, heapSizes[i%numThreads]);
         }
     }
 
-    for (int i = k; i < nTotalElements; i++)
+    pthread_mutex_init(&inputLock, NULL);
+    for (int i = 0; i < numThreads; i++)
     {
-        pair_t elm;
-        elm.inindex = i;
-        elm.key = input[i];
-        decreaseMax(output, elm);
+        printf("heap %d size: %d\n", i, heapSizes[i]);
+        pthread_mutex_init(&heapLocks[i], NULL);
     }
-    printf("after all decreaseMaxes:\n");
-    drawHeapTree(output, (int)(log2(k) + 2));
+
+    pthread_barrier_init(&barrier, NULL, numThreads);
 
     threadIds[0] = 0;
     for (int i = 1; i < numThreads; i++)
@@ -141,15 +206,41 @@ int main(int argc, char const *argv[])
         pthread_create(&threads[i], NULL, &thread_routine, threadIds + i);
     }
     thread_routine(threadIds); // main has to call it too as it is thread[0]
+    
+    // for (int i = 1; i < numThreads; i++)
+    //     pthread_join(threads[i], NULL);
 
-    for (int i = 1; i < numThreads; i++)
+    for (int i = 0; i < numThreads; i++)
     {
-        pthread_join(threads[i], NULL);
+        drawHeapTree(heaps[i], heapSizes[i], 6);
     }
 
-    verifyOutput(input, NULL, nTotalElements, k);
+    int w = 0;
+    for (int i = 0; i < numThreads; i++)
+    {
+        for (int j = 0; j < heapSizes[i]; j++)
+        {
+            printf("%.2f\n", heaps[i][j].key);
+            output[w].inindex = heaps[i][j].inindex;
+            output[w++].key = heaps[i][j].key;
+        }
+        printf("finished thread\n");
+    }
+    printf("finished, going to verify\n");
+
+    verifyOutput(input, output, nTotalElements, k);
+
+    // housekeeping
+    for (int i = 0; i < numThreads; i++)
+        pthread_mutex_destroy(&heapLocks[i]);
+    pthread_mutex_destroy(&inputLock);
+
     free(input);
     free(threadIds);
     free(output);
+    // for (int i = 0; i < numThreads; i++)
+    //     free(heaps[i]);
+    free(heaps);
+
     return 0;
 }
