@@ -37,9 +37,9 @@ void verifyOutput(const float *input, const pair_t *output, int nTotalElmts, int
         vec[i].inindex = i;
         vec[i].key = input[i];
     }
+    printf("comparing...\n");
     qsort(vec, nTotalElmts, sizeof(pair_t), comparator);
     qsort((void *)output, k, sizeof(pair_t), comparator);
-    printf("comparing...\n");
     // for (int i = 0; i < k; i++)
     // {
     //     printf("key: %.2f, inindex: %d\n", output[i].key, output[i].inindex);
@@ -102,7 +102,8 @@ void *thread_routine(void *args)
         decreaseMax(heaps[thId], k, elm);
     }
     printf("thread %d finished\n", thId);
-    pthread_exit(NULL);
+    if (thId > 0)
+        pthread_exit(NULL);
     return NULL;
 }
 
@@ -129,7 +130,7 @@ int main(int argc, char const *argv[])
             printf("<k> must be up to %d\n", nTotalElements);
             return 0;
         }
-        numThreads = atoi(argv[3]) <= 1 ? 1 : atoi(argv[3]) - 1;
+        numThreads = atoi(argv[3]);
         if (numThreads < 0)
         {
             printf("usage: %s <nTotalElements> <k> <numThreads>\n", argv[0]);
@@ -175,13 +176,15 @@ int main(int argc, char const *argv[])
         }
     }
 
-    for (int i = 0; i < numThreads; i++)
+    for (int i = 1; i < numThreads; i++)
     {
         threadIds[i] = i;
         pthread_create(&threads[i], NULL, &thread_routine, threadIds + i);
     }
+    threadIds[0] = 0;
+    thread_routine(threadIds);
 
-    for (int i = 0; i < numThreads; i++)
+    for (int i = 1; i < numThreads; i++)
         pthread_join(threads[i], NULL);
 
     // reducer
