@@ -17,3 +17,5 @@ void insert(pair_t *heap, int *size, pair_t element);
 int isMaxHeap(pair_t *heap, int size);
 
 void decreaseMax(pair_t *heap, int size, pair_t new_element);
+
+int isHeapElement(pair_t *heap, int size, pair_t elm);

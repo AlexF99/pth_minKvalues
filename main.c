@@ -52,18 +52,14 @@ void verifyOutput(const float *input, const pair_t *output, int nTotalElmts, int
     int elementsFound = 0;
     for (int i = 0; i < k; i++)
     {
-        int found = 0;
         for (int j = 0; j < k; j++)
         {
             if (vec[i].inindex == output[j].inindex)
             {
-                found = 1;
                 elementsFound++;
                 break;
             }
         }
-        if (found == 0)
-            break;
     }
 
     printf("found %d elements\n", elementsFound);
@@ -88,18 +84,18 @@ void *thread_routine(void *args)
 {
     int thId = *(int *)args;
     int nElements = nTotalElements / numThreads;
-
-    // assume que temos pelo menos 1 elemento por thread
-    int first = thId * nElements + k;
-    int last = min(k + (thId + 1) * nElements, nTotalElements) - 1;
-    printf("first: %d, last: %d\n", first, last);
+    int first = thId * nElements;
+    int last = min((thId + 1) * nElements, nTotalElements) - 1;
+    if (thId == numThreads - 1)
+        last = nTotalElements - 1;
 
     for (int i = first; i < last; i++)
     {
         pair_t elm;
         elm.inindex = i;
         elm.key = input[i];
-        decreaseMax(heaps[thId], k, elm);
+        if (!isHeapElement(heaps[thId], k, elm)) // O(k) overhead
+            decreaseMax(heaps[thId], k, elm);
     }
     printf("thread %d finished\n", thId);
     if (thId > 0)
@@ -199,7 +195,10 @@ int main(int argc, char const *argv[])
             if (i == 0)
                 insert(output, &outputSize, elm);
             else
-                decreaseMax(output, outputSize, elm);
+            {
+                if (!isHeapElement(output, outputSize, elm))
+                    decreaseMax(output, outputSize, elm);
+            }
         }
     }
 

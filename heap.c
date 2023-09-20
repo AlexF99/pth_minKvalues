@@ -113,3 +113,13 @@ void decreaseMax(pair_t *heap, int size, pair_t new_element)
         maxHeapify(heap, size, 0);
     }
 }
+
+int isHeapElement(pair_t *heap, int size, pair_t elm)
+{
+    for (int i = 0; i < size; i++)
+    {
+        if (elm.inindex == heap[i].inindex)
+            return 1;
+    }
+    return 0;
+}
