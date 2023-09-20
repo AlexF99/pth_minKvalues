@@ -5,6 +5,7 @@
 #include <math.h>
 
 #include "heap.h"
+#include "chrono.h"
 
 #define MAX_SIZE 120
 #define MAX_THREADS 64
@@ -89,7 +90,7 @@ void *thread_routine(void *args)
     if (thId == numThreads - 1)
         last = nTotalElements - 1;
 
-    for (int i = first; i < last; i++)
+    for (int i = first; i <= last; i++)
     {
         pair_t elm;
         elm.inindex = i;
@@ -172,6 +173,10 @@ int main(int argc, char const *argv[])
         }
     }
 
+    chronometer_t parallelReductionTime;
+    chrono_reset(&parallelReductionTime);
+    chrono_start(&parallelReductionTime);
+
     for (int i = 1; i < numThreads; i++)
     {
         threadIds[i] = i;
@@ -201,6 +206,14 @@ int main(int argc, char const *argv[])
             }
         }
     }
+
+    chrono_stop(&parallelReductionTime);
+    chrono_reportTime(&parallelReductionTime, "parallelReductionTime");
+    // calcular e imprimir a VAZAO (numero de operacoes/s)
+    double total_time_in_seconds = (double)chrono_gettotal(&parallelReductionTime) / ((double)1000 * 1000 * 1000);
+    printf("total_time_in_seconds: %lf s\n", total_time_in_seconds);
+    double OPS = (nTotalElements) / total_time_in_seconds;
+    printf("Throughput: %lf OP/s\n", OPS);
 
     verifyOutput(input, output, nTotalElements, k);
 
