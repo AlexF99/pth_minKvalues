@@ -95,7 +95,9 @@ void *thread_routine(void *args)
         pair_t elm;
         elm.inindex = i;
         elm.key = input[i];
-        if (!isHeapElement(heaps[thId], k, elm)) // O(k) overhead
+        if (heapSizes[thId] < k)
+            insert(heaps[thId], &heapSizes[thId], elm);
+        else
             decreaseMax(heaps[thId], k, elm);
     }
     printf("thread %d finished\n", thId);
@@ -163,14 +165,6 @@ int main(int argc, char const *argv[])
         int b = rand();
         float v = a * 100.0 + b;
         input[i] = v;
-        if (i < k)
-        {
-            pair_t elm;
-            elm.inindex = i;
-            elm.key = v;
-            for (int j = 0; j < numThreads; j++) // insere o mesmo elemento em todas as heaps
-                insert(heaps[j], &heapSizes[j], elm);
-        }
     }
 
     chronometer_t parallelReductionTime;
@@ -197,13 +191,10 @@ int main(int argc, char const *argv[])
             pair_t elm;
             elm.inindex = heaps[i][j].inindex;
             elm.key = heaps[i][j].key;
-            if (i == 0)
+            if (outputSize < k)
                 insert(output, &outputSize, elm);
             else
-            {
-                if (!isHeapElement(output, outputSize, elm))
-                    decreaseMax(output, outputSize, elm);
-            }
+                decreaseMax(output, outputSize, elm);
         }
     }
 
