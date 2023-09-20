@@ -127,7 +127,7 @@ int main(int argc, char const *argv[])
             return 0;
         }
         numThreads = atoi(argv[3]);
-        if (numThreads < 0)
+        if (numThreads < 1)
         {
             printf("usage: %s <nTotalElements> <k> <numThreads>\n", argv[0]);
             printf("<numThreads> can't be 0\n");
@@ -208,6 +208,8 @@ int main(int argc, char const *argv[])
     free(input);
     free(threadIds);
     free(output);
+    for (int i = 0; i < numThreads; i++)
+        free(heaps[i]);
     free(heaps);
     free(heapSizes);
 
