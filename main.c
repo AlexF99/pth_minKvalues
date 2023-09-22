@@ -205,7 +205,7 @@ int main(int argc, char const *argv[])
     double OPS = (nTotalElements) / total_time_in_seconds;
     printf("Throughput: %lf OP/s\n", OPS);
 
-    // verifyOutput(input, output, nTotalElements, k);
+    verifyOutput(input, output, nTotalElements, k);
 
     // housekeeping
     free(input);
