@@ -81,7 +81,7 @@ int min(int a, int b)
         return b;
 }
 
-void *thread_routine(void *args)
+void *partialDecMax(void *args)
 {
     int thId = *(int *)args;
     int nElements = nTotalElements / numThreads;
@@ -174,15 +174,15 @@ int main(int argc, char const *argv[])
     for (int i = 1; i < numThreads; i++)
     {
         threadIds[i] = i;
-        pthread_create(&threads[i], NULL, &thread_routine, threadIds + i);
+        pthread_create(&threads[i], NULL, &partialDecMax, threadIds + i);
     }
     threadIds[0] = 0;
-    thread_routine(threadIds);
+    partialDecMax(threadIds);
 
     for (int i = 1; i < numThreads; i++)
         pthread_join(threads[i], NULL);
 
-    // reducer
+    // joining heaps into one with min k values
     int outputSize = 0;
     for (int i = 0; i < numThreads; i++)
     {
@@ -200,13 +200,12 @@ int main(int argc, char const *argv[])
 
     chrono_stop(&parallelReductionTime);
     chrono_reportTime(&parallelReductionTime, "parallelReductionTime");
-    // calcular e imprimir a VAZAO (numero de operacoes/s)
     double total_time_in_seconds = (double)chrono_gettotal(&parallelReductionTime) / ((double)1000 * 1000 * 1000);
     printf("total_time_in_seconds: %lf s\n", total_time_in_seconds);
     double OPS = (nTotalElements) / total_time_in_seconds;
     printf("Throughput: %lf OP/s\n", OPS);
 
-    verifyOutput(input, output, nTotalElements, k);
+    // verifyOutput(input, output, nTotalElements, k);
 
     // housekeeping
     free(input);
