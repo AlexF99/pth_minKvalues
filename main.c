@@ -22,6 +22,7 @@ int *heapSizes;
 
 // pthread variables
 pthread_t threads[MAX_THREADS];
+pthread_barrier_t barrier;
 
 int comparator(const void *e1, const void *e2)
 {
@@ -84,6 +85,9 @@ int min(int a, int b)
 void *partialDecMax(void *args)
 {
     int thId = *(int *)args;
+    printf("%d is waiting at barrier\n", thId);
+    pthread_barrier_wait(&barrier);
+    printf("%d has started working\n", thId);
     int nElements = nTotalElements / numThreads;
     int first = thId * nElements;
     int last = min((thId + 1) * nElements, nTotalElements) - 1;
@@ -169,15 +173,16 @@ int main(int argc, char const *argv[])
 
     chronometer_t parallelReductionTime;
     chrono_reset(&parallelReductionTime);
-    chrono_start(&parallelReductionTime);
 
+    pthread_barrier_init(&barrier, NULL, numThreads);
     for (int i = 1; i < numThreads; i++)
     {
         threadIds[i] = i;
         pthread_create(&threads[i], NULL, &partialDecMax, threadIds + i);
     }
     threadIds[0] = 0;
-    partialDecMax(threadIds);
+    chrono_start(&parallelReductionTime);
+    partialDecMax(threadIds); // this call will trigger all threads waiting at barrier
 
     for (int i = 1; i < numThreads; i++)
         pthread_join(threads[i], NULL);
