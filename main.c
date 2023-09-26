@@ -215,6 +215,7 @@ int main(int argc, char const *argv[])
     // housekeeping
     free(input);
     free(threadIds);
+    pthread_barrier_destroy(&barrier);
     free(output);
     for (int i = 0; i < numThreads; i++)
         free(heaps[i]);
