@@ -3,7 +3,7 @@ Programa para achar os k menores valores dado uma entrada de n Floats.
 Utiliza numThreads POSIX threads pela biblioteca PThreads.
 Autores:
 - Alexandre de Oliveira Plugge Freitas
-- Wilian Pereira
+- Wilian Pereira dos Santos
 */
 
 #include <stdlib.h>

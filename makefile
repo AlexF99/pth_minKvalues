@@ -7,7 +7,5 @@ compileSingle:
 	gcc -Wall -O3 acharKMenores.c -o acharKMenores -lpthread -lm
 
 clean:
-	rm *.o
-	rm a.out
 	rm acharKMenores
-	resultado*
+	rm *.o

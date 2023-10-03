@@ -1,3 +1,10 @@
+/*
+Biblioteca de manipulação de heaps implicitas
+Autores:
+- Alexandre de Oliveira Plugge Freitas
+- Wilian Pereira dos Santos
+*/
+
 #include <stdio.h>
 #include <math.h>
 #include "heap.h"
