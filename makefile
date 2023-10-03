@@ -6,6 +6,9 @@ run:
 compileSingle:
 	gcc -Wall -O3 acharKMenores.c -o acharKMenores -lpthread -lm
 
+turnin:
+	tar -czvf aopf20_wps20.tar.gz *.c *.h makefile planilhaJ6.ods relatorio*.pdf *.sh
+
 clean:
 	rm acharKMenores
 	rm *.o

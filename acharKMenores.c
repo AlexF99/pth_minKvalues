@@ -4,6 +4,8 @@ Utiliza numThreads POSIX threads pela biblioteca PThreads.
 Autores:
 - Alexandre de Oliveira Plugge Freitas
 - Wilian Pereira dos Santos
+
+compilar com: gcc -Wall -O3 acharKMenores.c -o acharKMenores -lpthread -lm
 */
 
 #include <stdlib.h>
